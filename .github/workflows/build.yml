@@ -1,0 +1,26 @@
+name: Build plugin
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install Android build tools
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;28.2.13676358'
+      - name: Test
+        run: python3 tools/test.py
+      - name: Build
+        run: python3 tools/build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rockchip-led-control
+          path: |
+            dist/*.zip
+            dist/*.sha256
+            dist/kiosk-satellite-plugin.json
