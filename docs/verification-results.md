@@ -6,8 +6,8 @@ These results cover the initial 0.1.0 implementation. They do not claim physical
 | --- | --- |
 | Standalone Java tests | Passed channel scaling, effect bounds, simulated HA commands, settings persistence and thread cleanup |
 | Native protocol tests | Passed device path, read/write open mode, scalar ioctl arguments, RGB ordering, off command and error cleanup using fake system calls |
-| Native builds | Built arm64-v8a, armeabi-v7a and x86_64 libraries and packaged the SDK 2 ZIP |
-| KS package and entity tests | Passed SDK 1 compatibility, SDK 2 validation and RGB state checks |
+| Native builds | Built arm64-v8a, armeabi-v7a and x86_64 libraries and packaged the SDK 1 ZIP |
+| KS package and entity tests | Passed SDK 1 package validation and RGB state checks |
 | Home Assistant client | Passed real aioesphomeapi 46.4.0 list/state/command exchanges against the KS server, including RGB mode and effects |
 | Native app UI | Verified grouped settings, color picker, sliders, dropdowns and runtime status on the test kiosk |
 | Remote Admin UI | Verified saved colors, brightness and effects at desktop and phone widths |

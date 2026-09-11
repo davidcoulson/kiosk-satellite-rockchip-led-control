@@ -15,15 +15,15 @@ A GitHub repository transfer preserves the repository history and redirect. KS r
 3. Run `python3 tools/test.py` and `python3 tools/build.py`.
 4. Commit the tested source, manifest and documentation and create a matching version tag.
 5. Publish a stable GitHub release for that tag. The Release workflow tests and builds the tagged source and attaches `kiosk-satellite-plugin.json`, `rockchip-led-control-VERSION.zip` and `rockchip-led-control-VERSION.zip.sha256`. Wait for it to finish successfully.
-6. Test installation through the repository URL on a KS build that supports SDK 2.
+6. Test installation through the repository URL on a KS build that supports SDK 1.
 
 KS reads the README from the release tag. Editing the default branch does not change the README attached to an already installed release. Publishing a release triggers the workflow. Commits and pull requests do not trigger builds. The tag must match the manifest version, with an optional `v` prefix.
 
-To retry manually, run `gh workflow run build.yml --ref vVERSION` on the existing release tag. The release must already exist. Manual runs on branches are rejected. The workflow attaches assets to the release but does not create or publish the release itself.
+To retry manually, run `gh workflow run build.yml --ref vVERSION` on the existing release tag. The release must already exist. Manual runs on branches are rejected. The workflow attaches assets to the release but does not create or publish the release itself. Use the workflow token for uploads. KS rejects manually attached assets and verifies the package against GitHub's digest. Direct ZIP installation is reserved for developer testing.
 
 ## SDK maintenance
 
-The vendored interfaces under `sdk/` are compile-time dependencies licensed under Apache-2.0. Compare them with the host interfaces when updating SDK support. SDK 2 adds native files, runtime status, persistent settings updates and RGB light publication while retaining SDK 1 compatibility in the host.
+The vendored interfaces under `sdk/` are compile-time dependencies licensed under Apache-2.0. Compare them with the host interfaces when updating SDK support. SDK 1 includes native files, runtime status, plugin settings, RGB lights, KS observations and transient controls. All examples and plugins use this first public API version.
 
 ## Initial scope
 

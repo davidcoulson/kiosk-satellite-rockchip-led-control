@@ -35,7 +35,7 @@ with tempfile.TemporaryDirectory(prefix='kiosk-plugin-') as temp:
     for folder in (sdk_classes, classes, dex):
         folder.mkdir()
     subprocess.run([java_tool('javac'), '--release', '8', '-d', str(sdk_classes), *map(str, sorted((ROOT / 'sdk/src').rglob('*.java')))], check=True)
-    sdk_jar = out / 'kiosk-plugin-sdk-2.jar'
+    sdk_jar = out / 'kiosk-plugin-sdk-1.jar'
     subprocess.run([java_tool('jar'), 'cf', str(sdk_jar), '-C', str(sdk_classes), '.'], check=True)
     subprocess.run([java_tool('javac'), '--release', '8', '-cp', os.pathsep.join([str(sdk_jar), str(platforms[-1])]), '-d', str(classes), *map(str, sorted((plugin / 'src').rglob('*.java')))], check=True)
     subprocess.run([str(build_tools[-1]), '--min-api', str(manifest['minAndroidSdk']), '--lib', str(platforms[-1]), '--classpath', str(sdk_jar), '--output', str(dex), *map(str, sorted(classes.rglob('*.class')))], check=True)

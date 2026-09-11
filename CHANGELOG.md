@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Consolidate the manifest and interfaces into the first public SDK 1, including optional KS observations and transient controls. The LED plugin requests neither host capability.
+- Document GitHub Actions releases as the installation path and local ZIPs as developer testing only.
+
 - Document gesture assignments, drawer shortcuts and Home Assistant buttons for plugin actions.
 
 - Build and attach plugin assets when a GitHub release is published instead of on pushes or pull requests. Keep manual runs on existing release tags and verify that the tag matches the manifest version.
@@ -16,7 +19,7 @@
 
 ### Added
 
-- Initial SDK 2 plugin for panels exposing `/dev/ledjni`.
+- Initial SDK 1 plugin for panels exposing `/dev/ledjni`.
 - Color picker, brightness, configurable channel drive and six effects.
 - Direct JNI access and an optional root helper with bounded requests.
 - Home Assistant RGB light with settings synchronization.

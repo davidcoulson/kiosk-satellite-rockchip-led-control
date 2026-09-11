@@ -5,7 +5,7 @@ from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 java=Path(os.environ.get('JAVA_HOME',Path(shutil.which('javac')).resolve().parents[1]))
 manifest=json.loads((root/'kiosk-satellite-plugin.json').read_text())
-assert manifest['apiVersion']==2 and manifest['id']=='rockchip-led-control'
+assert manifest['apiVersion']==1 and manifest['id']=='rockchip-led-control'
 assert len(manifest['settings'])<=20
 assert {s['type'] for s in manifest['settings']}=={'boolean','number','color','select'}
 with tempfile.TemporaryDirectory(prefix='rockchip-led-test-') as temp:

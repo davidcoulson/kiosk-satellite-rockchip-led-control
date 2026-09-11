@@ -8,7 +8,7 @@ Rockchip chipset branding alone does not establish compatibility. This plugin im
 
 ## Requirements
 
-- Kiosk Satellite with **plugin SDK 2 support**. This is currently a development change in the main KS repository. Earlier SDK 1 builds reject the plugin as incompatible.
+- Kiosk Satellite with **plugin SDK 1 support**. All plugin features use SDK 1, the first public API.
 - Android 7.0 or newer on arm64-v8a, armeabi-v7a or x86_64.
 - A compatible `/dev/ledjni` driver that permits direct access, or a rooted panel with an approved `su` helper path.
 - For Home Assistant control, enable Kiosk Satellite's ESPHome connection and native entities and add that device to Home Assistant.
@@ -17,15 +17,15 @@ The default configuration leaves the LED off and root fallback disabled. Hardwar
 
 ## Install and use
 
-1. Build the ZIP below or download it from a published release when one is available.
-2. Open **Plugin Manager > Developer Tools > Install from ZIP**, select `rockchip-led-control-0.1.0.zip` and review the trust prompt.
+1. Wait for a stable GitHub release and its GitHub Actions build to complete.
+2. Open **Plugin Manager > Add plugin**, paste this repository URL, review the manifest and README and choose **Trust and install**.
 3. Enable **Rockchip LED Control** on its entry row and open the subpage.
 4. Check the hardware status. Set **LED on**, **Color**, **Brightness** and **Effect**, then choose **Save settings**.
 5. Use the **Rockchip LED** light in Home Assistant for everyday control and automations.
 
 The plugin also declares **Check hardware access**, **Test red, green and blue** and **Turn LED off** actions. Assign them in Gestures or open their action rows to add a kiosk drawer shortcut or Home Assistant button. The settings page configures these connections instead of running actions. The three-second channel test respects brightness and the maximum drive setting and returns to the configured state afterward.
 
-When a GitHub release exists, you can also paste the repository URL into **Add plugin**. The entry row offers update checking and a README information modal. Updates stop and resume enabled plugins automatically. Disabling or uninstalling the plugin stops effects and attempts to turn the LED off.
+Normal installation uses the repository URL and GitHub Actions release assets. Manually uploaded release assets are rejected. **Developer Tools > Install from ZIP** is for developers testing their own local builds only. The entry row offers update checking and a README information modal. Updates stop and resume enabled plugins automatically. Disabling or uninstalling the plugin stops effects and attempts to turn the LED off.
 
 ## Controls
 
@@ -69,3 +69,5 @@ Tests cover channel scaling, effects, lifecycle cleanup, simulated HA commands a
 ## Publishing and handoff
 
 See [maintainer handoff](docs/maintainer-handoff.md) for repository ownership, releases and the transfer checklist. This repository is Apache-2.0. The plugin ID is `rockchip-led-control` and should stay stable when ownership changes.
+
+The plugin and vendored interfaces use SDK 1. This LED plugin does not request `host.read` or `host.control`. See the [complete KS interaction reference](https://github.com/jxlarrea/kiosk-satellite-plugin-hello-world/blob/main/docs/ks-api.md) for optional state queries, events and transient controls.
