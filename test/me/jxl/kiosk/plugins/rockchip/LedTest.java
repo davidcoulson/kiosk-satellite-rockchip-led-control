@@ -17,7 +17,7 @@ public final class LedTest {
         public void status(String value,boolean error){status=value;changes.incrementAndGet();}
         public void saveSettings(Map<String,Object> value){saved=new HashMap<>(value);}
         public void publishLight(String key,String name,String[] effects,Map<String,Object> value){
-            assert key.equals("panel");assert name.contains("simulation");assert effects.length==6;
+            assert key.equals("panel");assert name.contains("simulation");assert effects.length==25;
             state=new HashMap<>(value);changes.incrementAndGet();
         }
         public void removeLight(String key){state=null;changes.incrementAndGet();}
@@ -46,6 +46,20 @@ public final class LedTest {
                 for(int c:LedMath.frame(effect,elapsed,2000,new int[]{255,190,80}))assert c>=0&&c<=255;
             }
         }
+        // The 19 ported rich effects: fresh instance per name (matching how
+        // RockchipLedPlugin.configure() creates one), ticked across enough
+        // elapsed time to cover every state-machine transition and a couple
+        // of full periods for the slower ones (Sunrise/Sunset at 300s,
+        // Wake-Up Alarm's one-shot 600s ramp), checking every channel stays
+        // in range throughout.
+        for(Map.Entry<String,java.util.function.Supplier<LedRichEffect>> entry:LedEffectRegistry.RICH_EFFECTS.entrySet()){
+            LedRichEffect rich=entry.getValue().get();
+            for(long elapsed=0;elapsed<650_000;elapsed+=61){
+                for(int c:rich.tick(elapsed,new int[]{255,190,80})){
+                    assert c>=0&&c<=255:entry.getKey()+" produced out-of-range channel "+c+" at "+elapsed+"ms";
+                }
+            }
+        }
         assert LedTransport.Root.quote("a'b").equals("'a'\\''b'");
         Host host=new Host();RockchipLedPlugin plugin=new RockchipLedPlugin();
         plugin.start(host,defaults());waitFor(() -> host.state!=null);
@@ -60,6 +74,6 @@ public final class LedTest {
         Map<String,Object> settings=defaults();settings.put("exposeLight",false);plugin.configure(settings);waitFor(() -> host.state==null);
         plugin.stop();int count=host.changes.get();Thread.sleep(150);assert host.changes.get()==count;
         for(Thread thread:Thread.getAllStackTraces().keySet())assert !thread.isAlive()||!thread.getName().equals("rockchip-led");
-        System.out.println("PASS: channel limits, color math, six effects, root argument quoting, simulation, HA commands, settings persistence, entity removal and clean worker shutdown.");
+        System.out.println("PASS: channel limits, color math, 25 effects, root argument quoting, simulation, HA commands, settings persistence, entity removal and clean worker shutdown.");
     }
 }

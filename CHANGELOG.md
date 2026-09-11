@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+### Added
+
+- Port 19 additional effects from [davidcoulson/kiosk-satellite](https://github.com/davidcoulson/kiosk-satellite)'s `feature/rgb-led-support` branch: Sunrise/Sunset, Moonlight Glow, Lightning Storm, Wake-Up Alarm, Candle Flicker, Fairytwinkle, Fireworks Burst, Beacon Pulse, Heartbeat Pulse, Soft Glow, Rolling Fog (Pronounced), three Pacifica variants, three Aurora variants, Bubbles and Disco Sparkle — alongside this plugin's original six (None/Pulse/Blink/Rainbow/Candle/Random). Every ported effect is independently stateful (a fresh instance per selection, matching this plugin's own effect lifecycle) and covered by an elapsed-time sweep in `LedTest` checking every channel stays in range across each effect's full period, including the two slowest: Sunrise/Sunset's 300s cycle and Wake-Up Alarm's one-shot 600s ramp.
+
 ## Unreleased
 
 ### Changed

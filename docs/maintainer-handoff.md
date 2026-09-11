@@ -31,4 +31,4 @@ The vendored interfaces under `sdk/` are compile-time dependencies licensed unde
 
 ## Initial scope
 
-This plugin includes six independently implemented effects. It does not reproduce all 23 effects from the original fork. The maintainer can add effects without changing the host application. More device nodes, vendor-specific color calibration and additional hardware controls also belong in the plugin repository.
+This plugin includes its own six independently implemented effects plus 19 ported from the original fork's `led_effects.dart` (0.2.0) — 25 total, more than the fork's own 23, since the fork's four generic effects (Pulse/Strobe/Random/Flicker) differ from this plugin's own six. The maintainer can add effects without changing the host application. More device nodes, vendor-specific color calibration and additional hardware controls also belong in the plugin repository.

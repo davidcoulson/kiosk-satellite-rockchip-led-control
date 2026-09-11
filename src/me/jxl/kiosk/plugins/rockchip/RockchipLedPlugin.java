@@ -4,12 +4,23 @@ package me.jxl.kiosk.plugins.rockchip;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import me.jxl.kiosk.plugins.KioskPlugin;
 import me.jxl.kiosk.plugins.PluginHost;
 
 /** Owns all hardware access, effects and root helper lifetime for this plugin. */
 public final class RockchipLedPlugin implements KioskPlugin {
-    private static final String[] EFFECTS={"None","Pulse","Blink","Rainbow","Candle","Random"};
+    // The original five, still driven by LedMath.frame (unchanged), plus the
+    // 19 ported from davidcoulson/kiosk-satellite's led_effects.dart — see
+    // LedEffectRegistry for the name -> LedRichEffect mapping.
+    private static final String[] EFFECTS={
+        "None","Pulse","Blink","Rainbow","Candle","Random",
+        "Sunrise/Sunset","Moonlight Glow","Lightning Storm","Wake-Up Alarm","Candle Flicker",
+        "Fairytwinkle","Fireworks Burst","Beacon Pulse","Heartbeat Pulse","Soft Glow","Rolling Fog (Pronounced)",
+        "Pacifica (Calm Lagoon)","Pacifica (Storm)","Pacifica (Deep Current)",
+        "Aurora (Solar Storm)","Aurora (Pastel Dream)","Aurora (Red Sky)",
+        "Bubbles","Disco Sparkle",
+    };
     private final AtomicBoolean alive=new AtomicBoolean();
     private PluginHost host;
     private ScheduledExecutorService worker;
@@ -20,6 +31,12 @@ public final class RockchipLedPlugin implements KioskPlugin {
     private boolean loaded;
     private int[] lastFrame;
     private boolean lastPower;
+    // Non-null while the selected effect is one of the 19 ported ones —
+    // LedMath.frame handles the original five, which need no per-instance
+    // state. A fresh instance every time configure() runs (same as every
+    // other per-effect timing field here), so restarting an effect always
+    // starts from clean state.
+    private LedRichEffect richEffect;
 
     public void start(PluginHost host, Map<String,Object> settings) {
         this.host=host;
@@ -33,6 +50,8 @@ public final class RockchipLedPlugin implements KioskPlugin {
         submit(() -> {
             boolean recheck=transport==null || !Objects.equals(settings.get("simulation"),copy.get("simulation")) || !Objects.equals(settings.get("allowRoot"),copy.get("allowRoot"));
             settings=copy; effectStart=System.nanoTime();testStart=-1;lastFrame=null;
+            Supplier<LedRichEffect> supplier=LedEffectRegistry.RICH_EFFECTS.get(copy.get("effect"));
+            richEffect=supplier!=null?supplier.get():null;
             if (recheck) detect();
             frame();publish();
         });
@@ -98,7 +117,10 @@ public final class RockchipLedPlugin implements KioskPlugin {
         if(device==null || !alive.get() || settings.isEmpty())return;
         long elapsed=TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-effectStart);
         boolean power=Boolean.TRUE.equals(settings.get("power"));
-        int[] rgb=LedMath.frame((String)settings.get("effect"),elapsed,((Number)settings.get("period")).doubleValue(),LedMath.color((String)settings.get("color")));
+        int[] baseColor=LedMath.color((String)settings.get("color"));
+        int[] rgb=richEffect!=null
+            ?richEffect.tick(elapsed,baseColor)
+            :LedMath.frame((String)settings.get("effect"),elapsed,((Number)settings.get("period")).doubleValue(),baseColor);
         if(testStart>=0) {
             long test=TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-testStart);
             if(test<3000){power=true;rgb=new int[3];rgb[(int)(test/1000)]=255;}

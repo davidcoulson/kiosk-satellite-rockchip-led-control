@@ -1,6 +1,6 @@
 # Rockchip LED Control for Kiosk Satellite
 
-Control the front RGB status LED on Android panels that expose the vendor `/dev/ledjni` driver. The plugin provides a color picker, brightness control, six effects and an optional Home Assistant RGB light through Kiosk Satellite's ESPHome connection.
+Control the front RGB status LED on Android panels that expose the vendor `/dev/ledjni` driver. The plugin provides a color picker, brightness control, 25 effects and an optional Home Assistant RGB light through Kiosk Satellite's ESPHome connection.
 
 Rockchip chipset branding alone does not establish compatibility. This plugin implements the protocol described by [David Coulson in Kiosk Satellite issue #494](https://github.com/jxlarrea/kiosk-satellite/issues/494), with credit to [maxlyth/ha-paneld](https://github.com/maxlyth/ha-paneld) for the original vendor protocol research. It is an independent implementation and includes no vendor binaries or copied fork implementation.
 
@@ -34,7 +34,7 @@ Normal installation uses the repository URL and GitHub Actions release assets. M
 | LED on | Enables physical output independently of the plugin master switch |
 | Color | Base RGB color used by static output and color-based effects |
 | Brightness | Scales output from 0 to 100 percent |
-| Effect | None, Pulse, Blink, Rainbow, Candle or Random |
+| Effect | None, Pulse, Blink, Rainbow, Candle, Random, Sunrise/Sunset, Moonlight Glow, Lightning Storm, Wake-Up Alarm, Candle Flicker, Fairytwinkle, Fireworks Burst, Beacon Pulse, Heartbeat Pulse, Soft Glow, Rolling Fog (Pronounced), Pacifica (Calm Lagoon/Storm/Deep Current), Aurora (Solar Storm/Pastel Dream/Red Sky), Bubbles or Disco Sparkle — the last 19 ported from [davidcoulson/kiosk-satellite](https://github.com/davidcoulson/kiosk-satellite) |
 | Effect period | Controls the cycle length for Pulse, Blink, Rainbow and Random. Candle uses its own flicker timing |
 | Expose to Home Assistant | Publishes an RGB light only while access is available |
 | Maximum channel drive | Maps a full channel to 1 through 255. Defaults to 15 pending calibration on the actual panel |
@@ -45,7 +45,7 @@ The 0 to 15 default follows the conservative range in the original research. It 
 
 ## Home Assistant
 
-The light appears under the existing Kiosk Satellite ESPHome device. It supports on/off, RGB color, brightness and the six effects. Commands update the plugin's saved settings, so the subpage and Home Assistant use the same configuration. State reports the last applied command, not independent hardware readback.
+The light appears under the existing Kiosk Satellite ESPHome device. It supports on/off, RGB color, brightness and all 25 effects. Commands update the plugin's saved settings, so the subpage and Home Assistant use the same configuration. State reports the last applied command, not independent hardware readback.
 
 Turning **Expose to Home Assistant** on or off, gaining or losing device access and disabling the plugin changes the entity catalog. KS briefly reconnects ESPHome to advertise that change. Ordinary color, brightness and effect changes do not reconnect ESPHome or restart the kiosk.
 
