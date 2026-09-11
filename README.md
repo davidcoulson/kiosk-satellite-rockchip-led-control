@@ -70,4 +70,6 @@ Tests cover channel scaling, effects, lifecycle cleanup, simulated HA commands a
 
 See [maintainer handoff](docs/maintainer-handoff.md) for repository ownership, releases and the transfer checklist. This repository is Apache-2.0. The plugin ID is `rockchip-led-control` and should stay stable when ownership changes.
 
+Author: David Coulson. Built with AI assistance (Claude Code).
+
 The plugin and vendored interfaces use SDK 1. This LED plugin does not request `host.read` or `host.control`. See the [complete KS interaction reference](https://github.com/jxlarrea/kiosk-satellite-plugin-hello-world/blob/main/docs/ks-api.md) for optional state queries, events and transient controls.
