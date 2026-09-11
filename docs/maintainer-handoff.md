@@ -19,7 +19,11 @@ A GitHub repository transfer preserves the repository history and redirect. KS r
 
 KS reads the README from the release tag. Editing the default branch does not change the README attached to an already installed release. Publishing a release triggers the workflow. Commits and pull requests do not trigger builds. The tag must match the manifest version, with an optional `v` prefix.
 
+The workflow builds against Android 35 explicitly. To reproduce that platform selection locally, run `python3 tools/build.py --android-platform 35`. Newer platforms preinstalled on a runner do not change the release build.
+
 To retry manually, run `gh workflow run build.yml --ref vVERSION` on the existing release tag. The release must already exist. Manual runs on branches are rejected. The workflow attaches assets to the release but does not create or publish the release itself. Use the workflow token for uploads. KS rejects manually attached assets and verifies the package against GitHub's digest. Direct ZIP installation is reserved for developer testing.
+
+A rerun uses the source from the original release tag. After fixing build code, publish a new version whose tag includes the fix. Re-running a failed older tag does not pick up changes from the default branch.
 
 ## SDK maintenance
 

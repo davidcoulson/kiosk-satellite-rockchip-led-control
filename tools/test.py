@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run device-independent lifecycle and native protocol tests."""
 import json,os,shutil,subprocess,tempfile
+import sys
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 java=Path(os.environ.get('JAVA_HOME',Path(shutil.which('javac')).resolve().parents[1]))
@@ -16,3 +17,5 @@ with tempfile.TemporaryDirectory(prefix='rockchip-led-test-') as temp:
     subprocess.run(['cc','-Wall','-Wextra','-Werror','-I'+str(java/'include'),'-I'+str(java/'include/linux'),str(root/'test/native_test.c'),'-o',str(native)],check=True)
     subprocess.run([str(native)],check=True)
 print('PASS: manifest shape and native open mode, ioctl numbers, scalar arguments, error propagation, range rejection and descriptor cleanup.')
+
+subprocess.run([sys.executable, str(root / 'tools/test_android_sdk.py')], check=True)
