@@ -14,10 +14,12 @@ A GitHub repository transfer preserves the repository history and redirect. KS r
 2. Update `version` in `kiosk-satellite-plugin.json` and document changes in `CHANGELOG.md`.
 3. Run `python3 tools/test.py` and `python3 tools/build.py`.
 4. Commit the tested source, manifest and documentation and create a matching version tag.
-5. Create a stable GitHub release with three assets from `dist/`: `kiosk-satellite-plugin.json`, `rockchip-led-control-VERSION.zip` and `rockchip-led-control-VERSION.zip.sha256`.
+5. Publish a stable GitHub release for that tag. The Release workflow tests and builds the tagged source and attaches `kiosk-satellite-plugin.json`, `rockchip-led-control-VERSION.zip` and `rockchip-led-control-VERSION.zip.sha256`. Wait for it to finish successfully.
 6. Test installation through the repository URL on a KS build that supports SDK 2.
 
-KS reads the README from the release tag. Editing the default branch does not change the README attached to an already installed release. The workflows build and test the package but do not publish releases automatically.
+KS reads the README from the release tag. Editing the default branch does not change the README attached to an already installed release. Publishing a release triggers the workflow. Commits and pull requests do not trigger builds. The tag must match the manifest version, with an optional `v` prefix.
+
+To retry manually, run `gh workflow run build.yml --ref vVERSION` on the existing release tag. The release must already exist. Manual runs on branches are rejected. The workflow attaches assets to the release but does not create or publish the release itself.
 
 ## SDK maintenance
 

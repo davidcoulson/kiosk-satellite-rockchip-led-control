@@ -60,6 +60,8 @@ python3 tools/build.py
 
 The output in `dist/` contains the ZIP, its SHA-256 file, the release manifest and a compile-time SDK JAR. The ZIP contains the manifest, DEX JAR, license and native libraries for all three supported ABIs. The SDK classes are not bundled into the plugin JAR.
 
+GitHub Actions runs these tests and builds when a release is published and attaches the ZIP, checksum and manifest to that release. Commits and pull requests do not trigger builds. Manual runs are available on existing release tags. See [release instructions](docs/maintainer-handoff.md#release).
+
 Tests cover channel scaling, effects, lifecycle cleanup, simulated HA commands and the exact native ioctl sequence using fake system calls. They do not prove compatibility with a physical panel. See [initial verification results](docs/verification-results.md) for the completed checks. The initial physical verification must happen on a compatible device. See [hardware verification](docs/hardware-verification.md).
 
 ## Publishing and handoff
