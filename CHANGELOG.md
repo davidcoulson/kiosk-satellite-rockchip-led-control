@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2-20260911
+
+- Fix: enabling the plugin failed with "Failed requirement." on every real device. Cause: Kiosk Satellite's host caps a plugin's published light at 24 effects (`PluginBridge.kt`'s `publishLight`), and this plugin's 6 original + 19 ported effects totaled 25 — one over, with no error message attached to that check on the host side. Fixed by dropping "None" from the list published to Home Assistant's effect dropdown (24 entries); the host already accepts "None" as a light-state value even when it's absent from the declared list, so sending it (e.g. from this plugin's own on-device Settings screen) still works. The one real change: "None" (solid color, no animation) is no longer a pickable option in Home Assistant's effect dropdown specifically.
+
 ## 0.2.1-20260911
 
 - Correction: an earlier attempt at this release used a 4-component date-based version (`2026.09.11.01`), which Kiosk Satellite's plugin manifest validator rejects (`FormatException: Invalid plugin ID or version`) — it requires 3-component semver, optionally with a `-suffix`. That broken release has been removed; this one embeds the date as a semver prerelease suffix instead.

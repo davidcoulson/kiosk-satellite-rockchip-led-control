@@ -12,7 +12,9 @@ import me.jxl.kiosk.plugins.PluginHost;
 public final class RockchipLedPlugin implements KioskPlugin {
     // The original five, still driven by LedMath.frame (unchanged), plus the
     // 19 ported from davidcoulson/kiosk-satellite's led_effects.dart — see
-    // LedEffectRegistry for the name -> LedRichEffect mapping.
+    // LedEffectRegistry for the name -> LedRichEffect mapping. Includes
+    // "None" for internal validation (onEvent below, and the plugin's own
+    // Settings dropdown) — 25 entries.
     private static final String[] EFFECTS={
         "None","Pulse","Blink","Rainbow","Candle","Random",
         "Sunrise/Sunset","Moonlight Glow","Lightning Storm","Wake-Up Alarm","Candle Flicker",
@@ -21,6 +23,15 @@ public final class RockchipLedPlugin implements KioskPlugin {
         "Aurora (Solar Storm)","Aurora (Pastel Dream)","Aurora (Red Sky)",
         "Bubbles","Disco Sparkle",
     };
+    // The list handed to host.publishLight, which caps a registered light at
+    // 24 effects (PluginBridge.kt's publishLight: require(effects.size <= 24
+    // ...), with no message — surfaces as the unhelpful "Failed requirement."
+    // if exceeded). Drops "None": PluginLightState.validate on the host side
+    // already treats "None" as valid even when absent from the declared
+    // list, so sending it still works — it just won't appear as a pickable
+    // option in Home Assistant's effect dropdown, only via this plugin's own
+    // Settings screen (which validates against the full EFFECTS above).
+    private static final String[] ENTITY_EFFECTS=Arrays.copyOfRange(EFFECTS,1,EFFECTS.length);
     private final AtomicBoolean alive=new AtomicBoolean();
     private PluginHost host;
     private ScheduledExecutorService worker;
@@ -136,7 +147,7 @@ public final class RockchipLedPlugin implements KioskPlugin {
         int[] rgb=LedMath.color((String)settings.get("color"));Map<String,Object> state=new HashMap<>();
         state.put("on",settings.get("power"));state.put("brightness",((Number)settings.get("brightness")).doubleValue()/100);
         state.put("red",rgb[0]/255.0);state.put("green",rgb[1]/255.0);state.put("blue",rgb[2]/255.0);state.put("effect",settings.get("effect"));
-        host.publishLight("panel",Boolean.TRUE.equals(settings.get("simulation"))?"Rockchip LED (simulation)":"Rockchip LED",EFFECTS,state);
+        host.publishLight("panel",Boolean.TRUE.equals(settings.get("simulation"))?"Rockchip LED (simulation)":"Rockchip LED",ENTITY_EFFECTS,state);
     }
     private void status(String text,boolean error){if(alive.get())host.status(text,error);}
     private static String error(int code){return "LED access failed (errno "+(-code)+"). "+(code==-13||code==-1?"The device permissions or SELinux policy denied access.":"Check the panel driver and its /dev/ledjni node.");}

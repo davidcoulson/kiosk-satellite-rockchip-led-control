@@ -1,6 +1,6 @@
 # Rockchip LED Control for Kiosk Satellite
 
-Control the front RGB status LED on Android panels that expose the vendor `/dev/ledjni` driver. The plugin provides a color picker, brightness control, 25 effects and an optional Home Assistant RGB light through Kiosk Satellite's ESPHome connection.
+Control the front RGB status LED on Android panels that expose the vendor `/dev/ledjni` driver. The plugin provides a color picker, brightness control, 25 effects (24 of them selectable from Home Assistant, plus "None" on the plugin's own Settings screen — see below) and an optional Home Assistant RGB light through Kiosk Satellite's ESPHome connection.
 
 Rockchip chipset branding alone does not establish compatibility. This plugin implements the protocol described by [David Coulson in Kiosk Satellite issue #494](https://github.com/jxlarrea/kiosk-satellite/issues/494), with credit to [maxlyth/ha-paneld](https://github.com/maxlyth/ha-paneld) for the original vendor protocol research. It is an independent implementation and includes no vendor binaries or copied fork implementation.
 
@@ -45,7 +45,7 @@ The 0 to 15 default follows the conservative range in the original research. It 
 
 ## Home Assistant
 
-The light appears under the existing Kiosk Satellite ESPHome device. It supports on/off, RGB color, brightness and all 25 effects. Commands update the plugin's saved settings, so the subpage and Home Assistant use the same configuration. State reports the last applied command, not independent hardware readback.
+The light appears under the existing Kiosk Satellite ESPHome device. It supports on/off, RGB color, brightness and 24 of the 25 effects — Kiosk Satellite's plugin host caps a published light at 24 effects, so "None" (solid color, no animation) is left out of the Home Assistant dropdown; it's still available from the plugin's own on-device Settings screen, and the host accepts it if sent programmatically even though it isn't listed. Commands update the plugin's saved settings, so the subpage and Home Assistant use the same configuration. State reports the last applied command, not independent hardware readback.
 
 Turning **Expose to Home Assistant** on or off, gaining or losing device access and disabling the plugin changes the entity catalog. KS briefly reconnects ESPHome to advertise that change. Ordinary color, brightness and effect changes do not reconnect ESPHome or restart the kiosk.
 

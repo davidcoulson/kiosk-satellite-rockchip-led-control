@@ -17,7 +17,15 @@ public final class LedTest {
         public void status(String value,boolean error){status=value;changes.incrementAndGet();}
         public void saveSettings(Map<String,Object> value){saved=new HashMap<>(value);}
         public void publishLight(String key,String name,String[] effects,Map<String,Object> value){
-            assert key.equals("panel");assert name.contains("simulation");assert effects.length==25;
+            assert key.equals("panel");assert name.contains("simulation");
+            // The real host (PluginBridge.kt) rejects more than 24 with an
+            // unhelpful "Failed requirement." — this mock enforces the same
+            // cap so a future effect addition fails here, locally, instead
+            // of only on a real device. See ENTITY_EFFECTS in
+            // RockchipLedPlugin for why this is 24, not 25.
+            assert effects.length<=24:"publishLight effects exceeds the host's 24-effect cap: "+effects.length;
+            assert effects.length==24;
+            assert !Arrays.asList(effects).contains("None"):"\"None\" should be omitted from the published list, not counted against the cap";
             state=new HashMap<>(value);changes.incrementAndGet();
         }
         public void removeLight(String key){state=null;changes.incrementAndGet();}
@@ -74,6 +82,6 @@ public final class LedTest {
         Map<String,Object> settings=defaults();settings.put("exposeLight",false);plugin.configure(settings);waitFor(() -> host.state==null);
         plugin.stop();int count=host.changes.get();Thread.sleep(150);assert host.changes.get()==count;
         for(Thread thread:Thread.getAllStackTraces().keySet())assert !thread.isAlive()||!thread.getName().equals("rockchip-led");
-        System.out.println("PASS: channel limits, color math, 25 effects, root argument quoting, simulation, HA commands, settings persistence, entity removal and clean worker shutdown.");
+        System.out.println("PASS: channel limits, color math, 19 rich effects, 24-effect entity cap, root argument quoting, simulation, HA commands, settings persistence, entity removal and clean worker shutdown.");
     }
 }
