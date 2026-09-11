@@ -20,7 +20,7 @@ The default configuration leaves the LED off and root fallback disabled. Hardwar
 1. Wait for a stable GitHub release and its GitHub Actions build to complete.
 2. Open **Plugin Manager > Add plugin**, paste this repository URL, review the manifest and README and choose **Trust and install**.
 3. Enable **Rockchip LED Control** on its entry row and open the subpage.
-4. Check the hardware status. Set **LED on**, **Color**, **Brightness** and **Effect**, then choose **Save settings**.
+4. Check the hardware status. Adjust **LED on**, **Color**, **Brightness** and **Effect**. Changes save automatically and sliders save when released.
 5. Use the **Rockchip LED** light in Home Assistant for everyday control and automations.
 
 The plugin also declares **Check hardware access**, **Test red, green and blue** and **Turn LED off** actions. Assign them in Gestures or open their action rows to add a kiosk drawer shortcut or Home Assistant button. The settings page configures these connections instead of running actions. The three-second channel test respects brightness and the maximum drive setting and returns to the configured state afterward.

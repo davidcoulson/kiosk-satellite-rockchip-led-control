@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Document automatic setting saves and the on-device text edit dialog.
+
 - Consolidate the manifest and interfaces into the first public SDK 1, including optional KS observations and transient controls. The LED plugin requests neither host capability.
 - Document GitHub Actions releases as the installation path and local ZIPs as developer testing only.
 
