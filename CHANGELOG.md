@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Document gesture assignments, drawer shortcuts and Home Assistant buttons for plugin actions.
+
 - Build and attach plugin assets when a GitHub release is published instead of on pushes or pull requests. Keep manual runs on existing release tags and verify that the tag matches the manifest version.
 
 ### Fixed
