@@ -13,6 +13,7 @@ with tempfile.TemporaryDirectory(prefix='rockchip-led-test-') as temp:
     sources=[*sorted((root/'sdk/src').rglob('*.java')),*sorted((root/'src').rglob('*.java')),*sorted((root/'test').rglob('*.java'))]
     subprocess.run([str(java/'bin/javac'),'--release','8','-d',temp,*map(str,sources)],check=True)
     subprocess.run([str(java/'bin/java'),'-ea','-cp',temp,'me.jxl.kiosk.plugins.rockchip.LedTest'],check=True)
+    subprocess.run([str(java/'bin/java'),'-ea','-cp',temp,'ManifestContractTest'],check=True)
     native=Path(temp)/'native-test'
     subprocess.run(['cc','-Wall','-Wextra','-Werror','-I'+str(java/'include'),'-I'+str(java/'include/linux'),str(root/'test/native_test.c'),'-o',str(native)],check=True)
     subprocess.run([str(native)],check=True)
