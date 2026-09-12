@@ -15,7 +15,13 @@ with tempfile.TemporaryDirectory(prefix='rockchip-led-test-') as temp:
     subprocess.run([str(java/'bin/java'),'-ea','-cp',temp,'me.jxl.kiosk.plugins.rockchip.LedTest'],check=True)
     subprocess.run([str(java/'bin/java'),'-ea','-cp',temp,'ManifestContractTest'],check=True)
     native=Path(temp)/'native-test'
-    subprocess.run(['cc','-Wall','-Wextra','-Werror','-I'+str(java/'include'),'-I'+str(java/'include/linux'),str(root/'test/native_test.c'),'-o',str(native)],check=True)
+    # jni.h includes jni_md.h from a per-OS subdirectory -- linux/ on the
+    # build machines, darwin/ on a Mac. Hardcoding linux/ made this test
+    # uncompilable on macOS ("jni_md.h file not found"), so find whichever
+    # one this JDK actually ships rather than assuming the platform.
+    md=next(iter(sorted((java/'include').glob('*/jni_md.h'))),None)
+    assert md is not None, f'no jni_md.h under {java}/include'
+    subprocess.run(['cc','-Wall','-Wextra','-Werror','-I'+str(java/'include'),'-I'+str(md.parent),str(root/'test/native_test.c'),'-o',str(native)],check=True)
     subprocess.run([str(native)],check=True)
 print('PASS: manifest shape and native open mode, ioctl numbers, scalar arguments, error propagation, range rejection and descriptor cleanup.')
 
