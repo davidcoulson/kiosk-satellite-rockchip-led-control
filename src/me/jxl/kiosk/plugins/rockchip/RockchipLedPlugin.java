@@ -109,38 +109,67 @@ public final class RockchipLedPlugin implements KioskPlugin {
         });
     }
     /**
-     * Refuse to start at all on a panel with no LED device node.
+     * Refuse to start at all on a panel this plugin cannot drive.
      *
      * Kiosk Satellite treats a plugin as enabled only when start() returns:
      * PluginBridge.enable writes enabled=true immediately after the call and
      * routes any throw through fail(), which writes enabled=false and keeps
      * the message as the plugin's error. detect() runs on the worker thread
-     * instead, so until now a missing node surfaced as an error status on a
-     * plugin that stayed switched on, re-probing hardware that will never
-     * appear and offering settings that can never do anything. Probing here,
-     * synchronously and before any state is built, converts that into what
-     * it actually is: this plugin cannot be enabled on this panel.
+     * instead, so a panel with no LED used to end up with this plugin
+     * switched on, re-probing hardware that will never appear and offering
+     * settings that can never do anything. Probing here, synchronously and
+     * before any state is built, converts that into what it actually is:
+     * this plugin cannot be enabled on this panel.
      *
      * Runs before alive/worker are set up, so a throw leaves nothing to
      * unwind.
      *
-     * Two deliberate exemptions. Simulation mode never opens the device, so
-     * it stays enableable anywhere -- that is the whole point of it. And a
-     * native library that fails to load leaves us unable to probe at all, so
-     * the question "does the node exist" is unanswerable here; that case
-     * falls through to detect() and reports exactly as it did before.
+     * The condition is "cannot open the device", NOT "the node is missing",
+     * and that distinction was learned the hard way on a real panel. An
+     * unprivileged app cannot see the difference: SELinux denies
+     * untrusted_app the lookup in /dev, so open() returns EACCES whether the
+     * node is absent or merely unreadable. A panel with no LED hardware at
+     * all still reports errno 13, never ENOENT -- so keying on ENOENT alone
+     * meant this guard never fired anywhere it mattered. Only root can tell
+     * the two apart, and root is exactly what we may not have.
+     *
+     * So: any probe failure refuses, unless something might still rescue it.
+     *
+     * Three deliberate exemptions.
+     *
+     * Simulation mode never opens the device, so it stays enableable
+     * anywhere -- that is the whole point of it.
+     *
+     * Root fallback, when armed, defers to detect(): the root helper may
+     * well reach a node this process cannot, and asking it here would mean
+     * blocking the host's enable call behind a root-manager prompt that can
+     * sit unanswered for minutes. detect() already does that wait properly,
+     * with a status to explain itself.
+     *
+     * A native library that will not load leaves us unable to probe at all,
+     * which makes the question unanswerable rather than answered no; that
+     * also falls through to detect() and reports as it always did.
+     *
+     * Both escape hatches named in the message are reachable while the
+     * plugin is off -- its settings page stays open, saying "Enable this
+     * plugin from its entry row to run it" -- so refusing here cannot strand
+     * anyone outside the settings that would fix it. Verified on a panel.
      */
     private void requireDevice(Map<String,Object> settings) {
         if(Boolean.TRUE.equals(settings.get("simulation")))return;
+        if(Boolean.TRUE.equals(settings.get("allowRoot")))return;
         try {
             if(!loaded){NativeLed.load(host.nativeLibraryPath("rockchip_led"));loaded=true;}
         } catch(Throwable unavailable){return;}
         int result=NativeLed.probe();
-        if(result==ENOENT||result==ENODEV)
-            throw new IllegalStateException(
-                "This panel has no /dev/ledjni device, so there is no LED for this plugin to control. "+
-                "A Rockchip chipset alone does not imply LED support. "+
-                "Turn on Simulation mode if you want to enable the plugin anyway.");
+        if(result==0)return;
+        throw new IllegalStateException(
+            (result==ENOENT||result==ENODEV
+                ?"This panel has no /dev/ledjni device, so there is no LED for this plugin to control. "
+                :error(result)+" ")+
+            "A Rockchip chipset alone does not imply LED support. Turn on Root fallback below if this "+
+            "panel is rooted, or Simulation mode to enable the plugin without hardware -- both stay "+
+            "reachable while the plugin is off.");
     }
     private static double unit(Object value) {
         if(!(value instanceof Number)) throw new IllegalArgumentException("Expected a light number");

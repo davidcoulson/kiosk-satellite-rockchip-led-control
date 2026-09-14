@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.4-20260914
+
+- Fix: 0.2.3's guard never fired. It refused to start only on `ENOENT`/`ENODEV`, on the reasoning that SELinux denials surface as `EACCES` and so a genuine `ENOENT` must mean the node is absent. The first half is true and the conclusion does not follow: SELinux denies `untrusted_app` the lookup in `/dev`, so `open()` returns `EACCES` *before* it can discover the file is not there. Tested on a panel with no LED hardware whatsoever, the plugin still reported errno 13 and enabled itself exactly as before. Only root can distinguish the two cases, and root is precisely what may be unavailable.
+- The guard now refuses on **any** probe failure rather than a missing node specifically, which is the condition that was actually meant: this plugin cannot open the device, so it cannot work.
+- Three exemptions, all of which defer instead of refusing. Simulation mode never opens the device. Root fallback, when armed, defers to `detect()` — the root helper may reach a node this process cannot, and asking it during `start()` would block the host's enable call behind a root-manager prompt that can sit unanswered for minutes. A native library that will not load leaves the plugin unable to probe at all, which makes the question unanswerable rather than answered no.
+- The refusal message names both escape hatches. A plugin's settings page stays reachable while it is disabled ("Enable this plugin from its entry row to run it"), so Root fallback and Simulation can both be switched on after a refusal — verified on a panel, since refusing otherwise risked stranding users outside the settings that would fix it.
+
 ## 0.2.3-20260914
 
 - Change: a panel with no `/dev/ledjni` node can no longer enable this plugin at all. The hardware probe ran on the worker thread, after `start()` had already returned, so Kiosk Satellite recorded the plugin as enabled and the missing device showed up only as an error status — on a plugin that stayed switched on, kept re-probing hardware that will never appear, and offered settings that could never do anything. The probe now runs synchronously in `start()`, and a missing node throws; the host's `PluginBridge.enable` routes that through `fail()`, which writes `enabled=false` and keeps the message. Enabling the plugin on a panel without the LED driver now fails with an explanation instead of appearing to succeed.

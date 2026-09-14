@@ -95,6 +95,18 @@ public final class LedTest {
         waitFor(() -> !bare.status.isEmpty());
         deferred.stop();
         System.out.println("PASS: a host without a native library path defers to detect() instead of blocking enable ("+bare.status+")");
+        // The root-fallback exemption. With allowRoot armed, requireDevice
+        // must return before it touches the native library at all: the root
+        // helper may reach a node this process cannot, and probing here
+        // would block the host's enable call behind a root-manager prompt.
+        // Asserted by the absence of a throw on a host that cannot supply a
+        // library path -- reaching the load would be the bug.
+        Host rooted=new Host();RockchipLedPlugin viaRoot=new RockchipLedPlugin();
+        Map<String,Object> rootSettings=defaults();
+        rootSettings.put("simulation",false);rootSettings.put("allowRoot",true);rootSettings.put("exposeLight",false);
+        viaRoot.start(rooted,rootSettings);
+        viaRoot.stop();
+        System.out.println("PASS: root fallback defers the probe to detect() rather than refusing the enable");
         for(Thread thread:Thread.getAllStackTraces().keySet())assert !thread.isAlive()||!thread.getName().equals("rockchip-led");
         System.out.println("PASS: channel limits, color math, 19 rich effects, 24-effect entity cap, root argument quoting, simulation, HA commands, settings persistence, entity removal and clean worker shutdown.");
     }
