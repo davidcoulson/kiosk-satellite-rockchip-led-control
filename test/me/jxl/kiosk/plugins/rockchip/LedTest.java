@@ -81,6 +81,20 @@ public final class LedTest {
         assert host.saved.get("power").equals(false);
         Map<String,Object> settings=defaults();settings.put("exposeLight",false);plugin.configure(settings);waitFor(() -> host.state==null);
         plugin.stop();int count=host.changes.get();Thread.sleep(150);assert host.changes.get()==count;
+        // requireDevice's deferral exemption. A host that cannot hand over a
+        // native library path (no SDK 1 support, wrong ABI, missing file)
+        // leaves the plugin unable to probe, so "is /dev/ledjni there?" has
+        // no answer and start() must NOT refuse -- it falls through to
+        // detect() and reports the way it always did. Without the catch in
+        // requireDevice this start throws UnsupportedOperationException out
+        // of the SDK's default nativeLibraryPath and the plugin becomes
+        // unenableable everywhere, including on panels whose LED works.
+        Host bare=new Host();RockchipLedPlugin deferred=new RockchipLedPlugin();
+        Map<String,Object> real=defaults();real.put("simulation",false);real.put("exposeLight",false);
+        deferred.start(bare,real);
+        waitFor(() -> !bare.status.isEmpty());
+        deferred.stop();
+        System.out.println("PASS: a host without a native library path defers to detect() instead of blocking enable ("+bare.status+")");
         for(Thread thread:Thread.getAllStackTraces().keySet())assert !thread.isAlive()||!thread.getName().equals("rockchip-led");
         System.out.println("PASS: channel limits, color math, 19 rich effects, 24-effect entity cap, root argument quoting, simulation, HA commands, settings persistence, entity removal and clean worker shutdown.");
     }

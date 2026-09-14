@@ -32,6 +32,14 @@ public final class RockchipLedPlugin implements KioskPlugin {
     // option in Home Assistant's effect dropdown, only via this plugin's own
     // Settings screen (which validates against the full EFFECTS above).
     private static final String[] ENTITY_EFFECTS=Arrays.copyOfRange(EFFECTS,1,EFFECTS.length);
+    // probe() returns -errno from open("/dev/ledjni"). These two mean the
+    // node is not there at all, which is the one failure no amount of
+    // retrying, permission fixing or root escalation can clear -- root
+    // cannot conjure a device node the kernel never published. EACCES (-13)
+    // is deliberately NOT here: that node exists, and the root fallback may
+    // still reach it.
+    private static final int ENOENT=-2;
+    private static final int ENODEV=-19;
     private final AtomicBoolean alive=new AtomicBoolean();
     private PluginHost host;
     private ScheduledExecutorService worker;
@@ -51,6 +59,7 @@ public final class RockchipLedPlugin implements KioskPlugin {
 
     public void start(PluginHost host, Map<String,Object> settings) {
         this.host=host;
+        requireDevice(settings);
         alive.set(true);
         worker=Executors.newSingleThreadScheduledExecutor(r -> {Thread t=new Thread(r,"rockchip-led");t.setDaemon(true);return t;});
         configure(settings);
@@ -99,6 +108,40 @@ public final class RockchipLedPlugin implements KioskPlugin {
             frame();publish();host.saveSettings(settings);
         });
     }
+    /**
+     * Refuse to start at all on a panel with no LED device node.
+     *
+     * Kiosk Satellite treats a plugin as enabled only when start() returns:
+     * PluginBridge.enable writes enabled=true immediately after the call and
+     * routes any throw through fail(), which writes enabled=false and keeps
+     * the message as the plugin's error. detect() runs on the worker thread
+     * instead, so until now a missing node surfaced as an error status on a
+     * plugin that stayed switched on, re-probing hardware that will never
+     * appear and offering settings that can never do anything. Probing here,
+     * synchronously and before any state is built, converts that into what
+     * it actually is: this plugin cannot be enabled on this panel.
+     *
+     * Runs before alive/worker are set up, so a throw leaves nothing to
+     * unwind.
+     *
+     * Two deliberate exemptions. Simulation mode never opens the device, so
+     * it stays enableable anywhere -- that is the whole point of it. And a
+     * native library that fails to load leaves us unable to probe at all, so
+     * the question "does the node exist" is unanswerable here; that case
+     * falls through to detect() and reports exactly as it did before.
+     */
+    private void requireDevice(Map<String,Object> settings) {
+        if(Boolean.TRUE.equals(settings.get("simulation")))return;
+        try {
+            if(!loaded){NativeLed.load(host.nativeLibraryPath("rockchip_led"));loaded=true;}
+        } catch(Throwable unavailable){return;}
+        int result=NativeLed.probe();
+        if(result==ENOENT||result==ENODEV)
+            throw new IllegalStateException(
+                "This panel has no /dev/ledjni device, so there is no LED for this plugin to control. "+
+                "A Rockchip chipset alone does not imply LED support. "+
+                "Turn on Simulation mode if you want to enable the plugin anyway.");
+    }
     private static double unit(Object value) {
         if(!(value instanceof Number)) throw new IllegalArgumentException("Expected a light number");
         double number=((Number)value).doubleValue();
@@ -113,7 +156,11 @@ public final class RockchipLedPlugin implements KioskPlugin {
             LedTransport direct=new LedTransport.Direct();
             int result=direct.probe();
             if(result==0)transport=direct;
-            else if(result==-2 || result==-19) {status("This panel has no accessible /dev/ledjni device. Rockchip chipset alone does not imply LED support.",true);return;}
+            // Reachable when the node disappears under a running plugin (a
+            // driver unload), or when start() could not probe because the
+            // native library would not load. A fresh enable is refused by
+            // requireDevice long before this.
+            else if(result==ENOENT || result==ENODEV) {status("This panel has no accessible /dev/ledjni device. Rockchip chipset alone does not imply LED support.",true);return;}
             else if(Boolean.TRUE.equals(settings.get("allowRoot"))) {
                 status("Waiting for root access. Approve Kiosk Satellite in your root manager if prompted.",false);
                 LedTransport.Root root=new LedTransport.Root(host.packagePath(),host.nativeLibraryPath("rockchip_led"));

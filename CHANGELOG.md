@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3-20260914
+
+- Change: a panel with no `/dev/ledjni` node can no longer enable this plugin at all. The hardware probe ran on the worker thread, after `start()` had already returned, so Kiosk Satellite recorded the plugin as enabled and the missing device showed up only as an error status — on a plugin that stayed switched on, kept re-probing hardware that will never appear, and offered settings that could never do anything. The probe now runs synchronously in `start()`, and a missing node throws; the host's `PluginBridge.enable` routes that through `fail()`, which writes `enabled=false` and keeps the message. Enabling the plugin on a panel without the LED driver now fails with an explanation instead of appearing to succeed.
+- Only a genuinely absent node blocks enabling (`ENOENT`/`ENODEV`). A node that exists but is unreadable (`EACCES`) is untouched, because the root fallback may still reach it. Simulation mode is exempt and stays enableable on any panel — it never opens the device. A native library that will not load is also exempt: it leaves the plugin unable to probe, so the question has no answer and the old deferred reporting applies.
+
 ## 0.2.2-20260911
 
 - Fix: enabling the plugin failed with "Failed requirement." on every real device. Cause: Kiosk Satellite's host caps a plugin's published light at 24 effects (`PluginBridge.kt`'s `publishLight`), and this plugin's 6 original + 19 ported effects totaled 25 — one over, with no error message attached to that check on the host side. Fixed by dropping "None" from the list published to Home Assistant's effect dropdown (24 entries); the host already accepts "None" as a light-state value even when it's absent from the declared list, so sending it (e.g. from this plugin's own on-device Settings screen) still works. The one real change: "None" (solid color, no animation) is no longer a pickable option in Home Assistant's effect dropdown specifically.
