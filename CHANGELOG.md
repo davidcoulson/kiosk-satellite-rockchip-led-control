@@ -2,8 +2,14 @@
 
 ## 0.2.4-20260914
 
-- Fix: 0.2.3's guard never fired. It refused to start only on `ENOENT`/`ENODEV`, on the reasoning that SELinux denials surface as `EACCES` and so a genuine `ENOENT` must mean the node is absent. The first half is true and the conclusion does not follow: SELinux denies `untrusted_app` the lookup in `/dev`, so `open()` returns `EACCES` *before* it can discover the file is not there. Tested on a panel with no LED hardware whatsoever, the plugin still reported errno 13 and enabled itself exactly as before. Only root can distinguish the two cases, and root is precisely what may be unavailable.
-- The guard now refuses on **any** probe failure rather than a missing node specifically, which is the condition that was actually meant: this plugin cannot open the device, so it cannot work.
+- Widen the guard: it now refuses on **any** probe failure, not on a missing node specifically.
+
+  The reasoning first published here was wrong, and is corrected in full because it would mislead anyone reasoning about `/dev` access later. This entry originally claimed 0.2.3's guard "never fired" because SELinux denies `untrusted_app` the lookup in `/dev`, so `open()` supposedly returns `EACCES` before it can discover a file is absent. That is not what happens. On a panel with genuinely no `/dev/ledjni`, the probe returns `ENOENT` exactly as 0.2.3 assumed, and 0.2.3's guard fires correctly.
+
+  The `EACCES` (errno 13) that prompted the rewrite was self-inflicted: a diagnostic session opened `/dev/ledjni` read-write **as root** while testing, and `>` on a missing path creates it — leaving a stray zero-byte regular file labelled `device:s0` that the app could not open. The plugin was reading a mistake in the test environment, not a property of SELinux. Removing the stray file restored `ENOENT`.
+
+  0.2.3's premise was therefore sound, and this release is a genuine widening rather than a correction of a broken guard.
+- Widening it is still worth doing, for a case 0.2.3 did miss: a node that exists but cannot be opened, on a panel with no root fallback, cannot drive an LED either. 0.2.3 enabled there and reported an error; this release refuses, which is the condition actually meant — this plugin cannot open the device, so it cannot work.
 - Three exemptions, all of which defer instead of refusing. Simulation mode never opens the device. Root fallback, when armed, defers to `detect()` — the root helper may reach a node this process cannot, and asking it during `start()` would block the host's enable call behind a root-manager prompt that can sit unanswered for minutes. A native library that will not load leaves the plugin unable to probe at all, which makes the question unanswerable rather than answered no.
 - The refusal message names both escape hatches. A plugin's settings page stays reachable while it is disabled ("Enable this plugin from its entry row to run it"), so Root fallback and Simulation can both be switched on after a refusal — verified on a panel, since refusing otherwise risked stranding users outside the settings that would fix it.
 

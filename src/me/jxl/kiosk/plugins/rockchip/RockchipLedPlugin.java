@@ -124,16 +124,17 @@ public final class RockchipLedPlugin implements KioskPlugin {
      * Runs before alive/worker are set up, so a throw leaves nothing to
      * unwind.
      *
-     * The condition is "cannot open the device", NOT "the node is missing",
-     * and that distinction was learned the hard way on a real panel. An
-     * unprivileged app cannot see the difference: SELinux denies
-     * untrusted_app the lookup in /dev, so open() returns EACCES whether the
-     * node is absent or merely unreadable. A panel with no LED hardware at
-     * all still reports errno 13, never ENOENT -- so keying on ENOENT alone
-     * meant this guard never fired anywhere it mattered. Only root can tell
-     * the two apart, and root is exactly what we may not have.
+     * The condition is "cannot open the device", NOT "the node is missing".
+     * A truly absent node does report ENOENT to an unprivileged app -- an
+     * earlier revision of this comment claimed SELinux masks that as EACCES,
+     * which is wrong, and the errno 13 that seemed to prove it came from a
+     * stray file a diagnostic session had left at /dev/ledjni.
      *
-     * So: any probe failure refuses, unless something might still rescue it.
+     * The wider condition earns its place on its own: a node that exists but
+     * will not open, on a panel with no root fallback, cannot drive an LED
+     * either, and keying on ENOENT alone would enable there and merely
+     * complain. So any probe failure refuses, unless something might still
+     * rescue it.
      *
      * Three deliberate exemptions.
      *
