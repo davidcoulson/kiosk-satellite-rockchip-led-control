@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.5-20260915
+
+No functional change. This release exists to carry a build fix and the
+documentation correction that 0.2.4 shipped without a build of its own.
+
+- **Build: `setup-android` no longer installs the legacy `tools` package.**
+  `android-actions/setup-android` defaults to installing `tools`, which has
+  been dropped from the cmdline-tools shipped on `ubuntu-24.04`. The step now
+  fails before any build runs. 0.2.4 released green on 14 September; the
+  runner image changed under it the next day, so this repo was one release
+  away from being unbuildable without anything here having changed. Caught on
+  a sibling plugin whose first release hit it.
+- The corrected account of why 0.2.3's guard appeared not to fire — the
+  `EACCES` was a stray file created by a diagnostic session, not an SELinux
+  property — was committed after 0.2.4 was cut and so had never appeared in a
+  released build. It is in this one.
+
 ## 0.2.4-20260914
 
 - Widen the guard: it now refuses on **any** probe failure, not on a missing node specifically.
