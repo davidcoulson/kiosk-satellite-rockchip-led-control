@@ -52,6 +52,8 @@ documentation correction that 0.2.4 shipped without a build of its own.
 
 ## Unreleased
 
+- Plugin 0.2.5-20261019: adds an icon for Community Plugins and Browse plugins.
+
 ### Changed
 
 - Document automatic setting saves and the on-device text edit dialog.
