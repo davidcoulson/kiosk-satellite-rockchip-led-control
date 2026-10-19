@@ -52,6 +52,8 @@ documentation correction that 0.2.4 shipped without a build of its own.
 
 ## Unreleased
 
+- Plugin 0.2.5-20261019.1: the package build now includes `assets/`, so the icon added in 0.2.5-20261019 is in the ZIP (it was missing, which hid the plugin from Community Plugins).
+
 - Plugin 0.2.5-20261019: adds an icon for Community Plugins and Browse plugins.
 
 ### Changed

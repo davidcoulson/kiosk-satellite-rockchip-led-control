@@ -26,3 +26,4 @@ with tempfile.TemporaryDirectory(prefix='rockchip-led-test-') as temp:
 print('PASS: manifest shape and native open mode, ioctl numbers, scalar arguments, error propagation, range rejection and descriptor cleanup.')
 
 subprocess.run([sys.executable, str(root / 'tools/test_android_sdk.py')], check=True)
+subprocess.run([sys.executable, str(root / 'tools/test_plugin_assets.py')], check=True)
