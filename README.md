@@ -36,7 +36,7 @@ Normal installation uses the repository URL and GitHub Actions release assets. M
 | Brightness | Scales output from 0 to 100 percent |
 | Effect | None, Pulse, Blink, Rainbow, Candle, Random, Sunrise/Sunset, Moonlight Glow, Lightning Storm, Wake-Up Alarm, Candle Flicker, Fairytwinkle, Fireworks Burst, Beacon Pulse, Heartbeat Pulse, Soft Glow, Rolling Fog (Pronounced), Pacifica (Calm Lagoon/Storm/Deep Current), Aurora (Solar Storm/Pastel Dream/Red Sky), Bubbles or Disco Sparkle — the last 19 ported from [davidcoulson/kiosk-satellite](https://github.com/davidcoulson/kiosk-satellite) |
 | Effect period | Controls the cycle length for Pulse, Blink, Rainbow and Random. Candle uses its own flicker timing |
-| Expose to Home Assistant | Publishes an RGB light only while access is available |
+| Expose to Home Assistant | Publishes an RGB light. While the LED cannot be reached it stays listed with no state, which Home Assistant shows as unknown |
 | Maximum channel drive | Maps a full channel to 1 through 255. Defaults to 15 pending calibration on the actual panel |
 | Allow root fallback | Allows the fixed LED helper through `su` when direct access is denied |
 | Simulation mode | Exercises controls and effects without touching hardware. The HA light name explicitly identifies simulation |
@@ -47,7 +47,7 @@ The 0 to 15 default follows the conservative range in the original research. It 
 
 The light appears under the existing Kiosk Satellite ESPHome device. It supports on/off, RGB color, brightness and 24 of the 25 effects — Kiosk Satellite's plugin host caps a published light at 24 effects, so "None" (solid color, no animation) is left out of the Home Assistant dropdown; it's still available from the plugin's own on-device Settings screen, and the host accepts it if sent programmatically even though it isn't listed. Commands update the plugin's saved settings, so the subpage and Home Assistant use the same configuration. State reports the last applied command, not independent hardware readback.
 
-Turning **Expose to Home Assistant** on or off, gaining or losing device access and disabling the plugin changes the entity catalog. KS briefly reconnects ESPHome to advertise that change. Ordinary color, brightness and effect changes do not reconnect ESPHome or restart the kiosk.
+Turning **Expose to Home Assistant** on or off, gaining or losing device access and disabling the plugin changes the entity catalog. Losing access keeps the light with no state, so its entity id and automations survive; Kiosk Satellite builds from before stateless plugin lights remove it instead. KS briefly reconnects ESPHome to advertise that change. Ordinary color, brightness and effect changes do not reconnect ESPHome or restart the kiosk.
 
 ## Build and test
 

@@ -43,6 +43,7 @@ public interface PluginHost {
     /** SDK 1. Persist settings changed by plugin actions or Home Assistant. */
     default void saveSettings(Map<String, Object> values) { throw new UnsupportedOperationException("SDK 1 required"); }
     /** SDK 1. Register or update an RGB light. Commands arrive as light.<key>. */
+    /** A null state keeps the light listed with no state (unknown in Home Assistant). Older hosts throw on null. */
     default void publishLight(String key, String name, String[] effects, Map<String, Object> state) { throw new UnsupportedOperationException("SDK 1 required"); }
     default void removeLight(String key) { throw new UnsupportedOperationException("SDK 1 required"); }
     /** SDK 1, entities. Numeric state or null for unknown. Metadata: unit, deviceClass, stateClass, accuracyDecimals. */

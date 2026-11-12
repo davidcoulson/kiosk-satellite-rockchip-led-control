@@ -179,7 +179,7 @@ public final class RockchipLedPlugin implements KioskPlugin {
         return number;
     }
     private void detect() throws Exception {
-        closeTransport();host.removeLight("panel");
+        closeTransport();
         if(Boolean.TRUE.equals(settings.get("simulation"))) transport=new LedTransport.Simulation();
         else {
             if(!loaded){NativeLed.load(host.nativeLibraryPath("rockchip_led"));loaded=true;}
@@ -220,11 +220,19 @@ public final class RockchipLedPlugin implements KioskPlugin {
         if(!lastPower||!Arrays.equals(drive,lastFrame)){check(device.write(drive[0],drive[1],drive[2]));lastFrame=drive;lastPower=true;}
     }
     private void publish(){
-        if(transport==null||!Boolean.TRUE.equals(settings.get("exposeLight"))){host.removeLight("panel");return;}
+        if(!Boolean.TRUE.equals(settings.get("exposeLight"))){host.removeLight("panel");return;}
+        String name=Boolean.TRUE.equals(settings.get("simulation"))?"Rockchip LED (simulation)":"Rockchip LED";
+        if(transport==null){
+            // Unreachable: keep the entity, with no state, so Home Assistant shows it unknown
+            // instead of deleting it. Hosts before stateless lights reject a null state.
+            try{host.publishLight("panel",name,ENTITY_EFFECTS,null);}
+            catch(RuntimeException olderHost){host.removeLight("panel");}
+            return;
+        }
         int[] rgb=LedMath.color((String)settings.get("color"));Map<String,Object> state=new HashMap<>();
         state.put("on",settings.get("power"));state.put("brightness",((Number)settings.get("brightness")).doubleValue()/100);
         state.put("red",rgb[0]/255.0);state.put("green",rgb[1]/255.0);state.put("blue",rgb[2]/255.0);state.put("effect",settings.get("effect"));
-        host.publishLight("panel",Boolean.TRUE.equals(settings.get("simulation"))?"Rockchip LED (simulation)":"Rockchip LED",ENTITY_EFFECTS,state);
+        host.publishLight("panel",name,ENTITY_EFFECTS,state);
     }
     private void status(String text,boolean error){if(alive.get())host.status(text,error);}
     private static String error(int code){return "LED access failed (errno "+(-code)+"). "+(code==-13||code==-1?"The device permissions or SELinux policy denied access.":"Check the panel driver and its /dev/ledjni node.");}
@@ -233,7 +241,11 @@ public final class RockchipLedPlugin implements KioskPlugin {
     private void safe(Task task){
         if(!alive.get())return;
         try{task.run();}catch(InterruptedException e){Thread.currentThread().interrupt();}
-        catch(Throwable e){closeTransport();if(alive.get()){host.removeLight("panel");status(e.getMessage()==null?e.getClass().getSimpleName():e.getMessage(),true);}}
+        catch(Throwable e){
+            closeTransport();if(!alive.get())return;
+            status(e.getMessage()==null?e.getClass().getSimpleName():e.getMessage(),true);
+            if(!settings.isEmpty()){try{publish();}catch(RuntimeException ignored){}}
+        }
     }
     private void submit(Task task){if(alive.get())worker.execute(() -> safe(task));}
     private void closeTransport(){LedTransport old=transport;transport=null;if(old!=null){try{old.off();}catch(Exception ignored){}old.close();}}

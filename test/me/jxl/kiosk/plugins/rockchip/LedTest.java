@@ -10,6 +10,10 @@ public final class LedTest {
         volatile Map<String,Object> state;
         volatile Map<String,Object> saved;
         volatile String status="";
+        /** Listed in the host's catalog, with or without a state. */
+        volatile boolean listed;
+        /** Acts like a KS host from before stateless lights, which throws on a null state. */
+        boolean rejectsNullState;
         final AtomicInteger changes=new AtomicInteger();
         public void showWindow(String a,String b,String c){throw new AssertionError("No overlay required");}
         public void hideWindow(){}
@@ -17,7 +21,12 @@ public final class LedTest {
         public void status(String value,boolean error){status=value;changes.incrementAndGet();}
         public void saveSettings(Map<String,Object> value){saved=new HashMap<>(value);}
         public void publishLight(String key,String name,String[] effects,Map<String,Object> value){
-            assert key.equals("panel");assert name.contains("simulation");
+            assert key.equals("panel");
+            if(value==null){
+                if(rejectsNullState)throw new NullPointerException("state");
+                listed=true;state=null;changes.incrementAndGet();return;
+            }
+            assert name.contains("simulation");
             // The real host (PluginBridge.kt) rejects more than 24 with an
             // unhelpful "Failed requirement." — this mock enforces the same
             // cap so a future effect addition fails here, locally, instead
@@ -26,9 +35,9 @@ public final class LedTest {
             assert effects.length<=24:"publishLight effects exceeds the host's 24-effect cap: "+effects.length;
             assert effects.length==24;
             assert !Arrays.asList(effects).contains("None"):"\"None\" should be omitted from the published list, not counted against the cap";
-            state=new HashMap<>(value);changes.incrementAndGet();
+            listed=true;state=new HashMap<>(value);changes.incrementAndGet();
         }
-        public void removeLight(String key){state=null;changes.incrementAndGet();}
+        public void removeLight(String key){listed=false;state=null;changes.incrementAndGet();}
     }
     private static Map<String,Object> defaults(){
         Map<String,Object> s=new HashMap<>();
@@ -95,6 +104,21 @@ public final class LedTest {
         waitFor(() -> !bare.status.isEmpty());
         deferred.stop();
         System.out.println("PASS: a host without a native library path defers to detect() instead of blocking enable ("+bare.status+")");
+        // An LED that cannot be reached stays listed with no state, so Home
+        // Assistant shows the entity unknown instead of deleting it.
+        Host unreachable=new Host();RockchipLedPlugin unknown=new RockchipLedPlugin();
+        Map<String,Object> exposed=defaults();exposed.put("simulation",false);
+        unknown.start(unreachable,exposed);
+        waitFor(() -> unreachable.listed);
+        assert unreachable.state==null;assert !unreachable.status.isEmpty();
+        unknown.stop();
+        // A KS host from before stateless lights rejects the null state: fall back to removing it.
+        Host older=new Host();older.rejectsNullState=true;RockchipLedPlugin legacy=new RockchipLedPlugin();
+        legacy.start(older,exposed);
+        waitFor(() -> !older.status.isEmpty() && older.changes.get()>1);
+        assert !older.listed;
+        legacy.stop();
+        System.out.println("PASS: an unreachable LED stays listed with no state, and an older host gets it removed");
         // The root-fallback exemption. With allowRoot armed, requireDevice
         // must return before it touches the native library at all: the root
         // helper may reach a node this process cannot, and probing here
