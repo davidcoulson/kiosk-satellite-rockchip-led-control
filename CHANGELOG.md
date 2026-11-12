@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.6-20261112
 
 - **An LED that cannot be reached no longer deletes its Home Assistant light.** A failed probe, a refused root grant or an error while driving the LED used to remove the light from the ESPHome device, so Home Assistant dropped the entity and anything using it. The light now stays listed with no state, which Home Assistant shows as unknown, and gets its state back once the LED can be reached. This needs a Kiosk Satellite build that accepts a light with no state; older builds reject it and the plugin removes the light as before.
 
